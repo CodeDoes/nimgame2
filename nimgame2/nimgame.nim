@@ -406,7 +406,7 @@ proc run*(game: Game) =
     fps = newCounter()
     ups = newCounter()
     timePrev, timeCurr: uint64
-    elapsed, lag, msPerFrame, updateCounter: int
+    elapsed, lag, msPerFrame, updateSteps: int
     updateIntervalSec: float
     event: sdl.Event
 
@@ -423,26 +423,26 @@ proc run*(game: Game) =
   # GC_disable()
   # Main loop
   
-  proc registerElapsedTime()=
+  proc stepElapsedTime()=
     elapsed = timeDiff(timePrev, timeCurr)
     timePrev = timeCurr
     lag += elapsed
-    updateIntervalSec = msToSec(elapsed)
+    updateIntervalSec = msToSec(updateInterval)
   while gameRunning:
     timeCurr = sdl.getPerformanceCounter()
-    registerElapsedTime()
+    stepElapsedTime()
     # Update
-    updateCounter = 0
-    while lag >= updateInterval:
+    updateSteps = 0
+    while lag >= updateInterval #[and updateSteps<maxUpdateSteps]#:
       if not gamePaused:
         game.fScene.update(updateIntervalSec)
         # clear inputs after the first loop
         resetKeyboard()
         initMouse()
         resetJoysticks()
+      inc(updateSteps)
       lag -= elapsed
-      registerElapsedTime()
-      inc(updateCounter)
+      stepElapsedTime()
 
     # Update playlist
     if not (playlist == nil):
@@ -460,10 +460,10 @@ proc run*(game: Game) =
         game.fScene.event(event)
 
     # Limit FPS
-    # if fpsLimit > 0:
-    #   msPerFrame = 1000 div fpsLimit
-    #   if lag < msPerFrame:
-    #     sdl.delay(uint32(msPerFrame - lag))
+    if fpsLimit > 0:
+      msPerFrame = 1000 div fpsLimit
+      if lag < msPerFrame:
+        sdl.delay(uint32(msPerFrame - lag))
 
 
     # Clear screen
@@ -486,7 +486,7 @@ proc run*(game: Game) =
         (8, 16), $ups.value & " updates per second", 0xFFFFFFFF'u32)
       # Show updates per frame
       discard string(
-        (8, 24), $updateCounter & " updates per frame", 0xFFFFFFFF'u32)
+        (8, 24), $updateSteps & " updates per frame", 0xFFFFFFFF'u32)
       # Show entities count
       discard string(
         (8, 32), $game.fScene.count & " entities", 0xFFFFFFFF'u32)

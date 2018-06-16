@@ -266,7 +266,7 @@ proc updateScene*(scene: Scene, elapsed: float) =
   for entity in scene.fList:
     entity.update(elapsed)
     if entity.collider != nil:
-      entity.colliding = @[]
+      entity.colliding.setLen(0)# = @[]
 
   # collisions
   for entity in scene.fList:

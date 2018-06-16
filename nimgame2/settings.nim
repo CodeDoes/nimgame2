@@ -38,4 +38,5 @@ var
   colliderOutline*: bool  ##  Show collider outlines
   colliderOutlineColor*: sdl.Color  ##  Color of collider outlines
   updateInterval*: int    ## ``update()`` is called each ``updateInterval`` ms.
+  maxUpdateSteps*: int = 10
 
