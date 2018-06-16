@@ -519,7 +519,7 @@ template timeDiff*(first, second: untyped): untyped = ##  \
   int(((second - first) * 1000) div sdl.getPerformanceFrequency())
 
 
-template msToSec*(ms: int): float = (ms / 1000)
+template msToSec*(ms: int): float = (ms.float / 1000.float)
 
 
 template secToMs*(sec: float): int = int(sec * 1000)

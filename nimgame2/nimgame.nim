@@ -417,25 +417,31 @@ proc run*(game: Game) =
   initKeyboard()
   initMouse()
   initJoysticks()
-
+  
+  # GC_disableMarkAndSweep()
+  # GC_enableMarkAndSweep()
+  # GC_disable()
   # Main loop
-  while gameRunning:
-    timeCurr = sdl.getPerformanceCounter()
+  
+  proc registerElapsedTime()=
     elapsed = timeDiff(timePrev, timeCurr)
     timePrev = timeCurr
     lag += elapsed
-    updateIntervalSec = msToSec(updateInterval)
-
+    updateIntervalSec = msToSec(elapsed)
+  while gameRunning:
+    timeCurr = sdl.getPerformanceCounter()
+    registerElapsedTime()
     # Update
     updateCounter = 0
     while lag >= updateInterval:
       if not gamePaused:
         game.fScene.update(updateIntervalSec)
         # clear inputs after the first loop
-        initKeyboard()
+        resetKeyboard()
         initMouse()
-        initJoysticks()
-      lag -= updateInterval
+        resetJoysticks()
+      lag -= elapsed
+      registerElapsedTime()
       inc(updateCounter)
 
     # Update playlist
@@ -454,10 +460,11 @@ proc run*(game: Game) =
         game.fScene.event(event)
 
     # Limit FPS
-    if fpsLimit > 0:
-      msPerFrame = 1000 div fpsLimit
-      if lag < msPerFrame:
-        sdl.delay(uint32(msPerFrame - lag))
+    # if fpsLimit > 0:
+    #   msPerFrame = 1000 div fpsLimit
+    #   if lag < msPerFrame:
+    #     sdl.delay(uint32(msPerFrame - lag))
+
 
     # Clear screen
     discard renderer.setRenderDrawColor(background)
@@ -497,6 +504,8 @@ proc run*(game: Game) =
     fps.update()
     ups.update()
   # while game.running
+  # GC_enable()
+  # GC_enableMarkAndSweep()
 
   # Free
   free(game)

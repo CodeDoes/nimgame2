@@ -71,17 +71,21 @@ proc initKeyboard*() =
   kbdPressed = @[]
   kbdReleased = @[]
 
+proc resetKeyboard*()=
+  kbdPressed.setLen(0)
+  kbdReleased.setLen(0)
 
 proc updateKeyboard*(event: Event) =
   ##  Called automatically from the main game cycle.
   ##
   kbd = sdl.getKeyboardState(nil)
-  if event.kind == KeyDown:
+  case event.kind
+  of KeyDown:
     if event.key.repeat == 0:
       kbdPressed.add(event.key.keysym.scancode)
-  elif event.kind == KeyUp:
+  of KeyUp:
     kbdReleased.add(event.key.keysym.scancode)
-
+  else: discard
 
 template down*(scancode: Scancode): bool =
   ##  Check if ``scancode`` (keyboard key) is down.
@@ -205,19 +209,19 @@ proc updateMouse*(event: Event) =
   mBtn = sdl.getMouseState(addr(ax), addr(ay)).int
   discard sdl.getRelativeMouseState(addr(rx), addr(ry))
   m = ((ax.float, ay.float), (rx.float, ry.float))
-
-  if event.kind == MouseButtonDown:
+  case event.kind
+  of MouseButtonDown:
     mPressed.set(event.button.button.int32)
-  elif event.kind == MouseButtonUp:
+  of MouseButtonUp:
     mReleased.set(event.button.button.int32)
-  elif event.kind == MouseWheel:
+  of MouseWheel:
     mWheelDirection = if event.wheel.direction == MouseWheelNormal: 1
                       else: -1
     # In order for mouse wheel to be consistant across platforms
     # we have to normalize the mouse wheel direction
     mWheel += Coord(
       (event.wheel.x.float, event.wheel.y.float) * mWheelDirection)
-
+  else: discard
 
 template mouse*(): Coord2 =
   ##  ``Return`` current mouse position.
@@ -430,27 +434,30 @@ proc initJoysticks*() =
   ##
   if joysticks == nil:
     joysticks = @[]
-  else:
-    for j in joysticks.opened:
-      for i in 0..<j.numButtons:
-        j.pressed[i] = 0
-        j.released[i] = 0
+proc resetJoysticks*()=
+  for j in joysticks.opened:
+    for i in 0..<j.numButtons:
+      j.pressed[i] = 0
+      j.released[i] = 0
 
 
 proc updateJoysticks*(event: Event) =
   ##  Called automatically from the main game cycle.
   ##
-  if event.kind == JoyButtonDown:
+  case event.kind
+  of JoyButtonDown:
     let id = event.jbutton.which
     if joysticks.high >= id:
       let btn = event.jbutton.button
       inc joysticks[id].pressed[btn]
 
-  elif event.kind == JoyButtonUp:
+  of JoyButtonUp:
     let id = event.jbutton.which
     if joysticks.high >= id:
       let btn = event.jbutton.button
       inc joysticks[id].released[btn]
+  else: discard
+    
 
 
 proc joyName*(joystick: int): string =

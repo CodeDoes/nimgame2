@@ -168,7 +168,7 @@ method collide*(pos: Coord, p: PolyCollider): bool =
     var
       i = 0
       j = p.points.high
-      c = 0
+      inside = false
     while i < p.points.len:
       let
         pi = rotate(p.points[i].scaled(p), ppPosition, ppRotation)
@@ -176,11 +176,11 @@ method collide*(pos: Coord, p: PolyCollider): bool =
       if ( ((pi.y <= pos.y) and (pos.y < pj.y)) or
           ((pj.y <= pos.y) and (pos.y < pi.y)) ) and
         ( pos.x < (pj.x - pi.x) * (pos.y - pi.y) / (pj.y - pi.y) + pi.x ):
-        c = if c == 0: 1 else: 0
+        inside = not inside
       # increment
       j = i
       inc i
-    return c > 0
+    return inside
 
 
 # Coord - Group
