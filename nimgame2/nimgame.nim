@@ -422,18 +422,21 @@ proc run*(game: Game) =
   # GC_enableMarkAndSweep()
   # GC_disable()
   # Main loop
-  
-  proc stepElapsedTime()=
+  let 
+    stored_background = renderer.getWindowSurface().duplicateSurface()
+  var
+    stored_background_rect: ptr Rect
+  stored_background.renderGetClipRect(stored_background_rect)
+  while gameRunning:
+    timeCurr = sdl.getPerformanceCounter()
     elapsed = timeDiff(timePrev, timeCurr)
     timePrev = timeCurr
     lag += elapsed
-    updateIntervalSec = msToSec(updateInterval)
-  while gameRunning:
-    timeCurr = sdl.getPerformanceCounter()
-    stepElapsedTime()
+    updateIntervalSec = msToSec(elapsed)
+
     # Update
     updateSteps = 0
-    while lag >= updateInterval #[and updateSteps<maxUpdateSteps]#:
+    while lag >= updateInterval and updateSteps < 10:
       if not gamePaused:
         game.fScene.update(updateIntervalSec)
         # clear inputs after the first loop
@@ -442,7 +445,6 @@ proc run*(game: Game) =
         resetJoysticks()
       inc(updateSteps)
       lag -= elapsed
-      stepElapsedTime()
 
     # Update playlist
     if not (playlist == nil):
@@ -467,8 +469,12 @@ proc run*(game: Game) =
 
 
     # Clear screen
-    discard renderer.setRenderDrawColor(background)
-    discard renderer.renderClear()
+    # discard renderer.setRenderDrawColor(background)
+    discard blitSurface(
+      renderer.getWindowSurface(),
+      stored_background_rect,
+      stored_background,
+      stored_background_rect)
 
     # Render scene
     if not (game.fScene == nil):
@@ -490,9 +496,12 @@ proc run*(game: Game) =
       # Show entities count
       discard string(
         (8, 32), $game.fScene.count & " entities", 0xFFFFFFFF'u32)
+      # Show restricted frames
+      discard string(
+        (8, 40), $(msPerFrame - lag) & " restricted fps", 0xFFFFFFFF'u32)
       # Show memory usage
       discard string(
-        (8, 40),
+        (8, 48),
         $(getOccupiedMem() shr 10) & " KB used of " &
         $(getTotalMem() shr 10) & " KB total",
         0xFFFFFFFF'u32)
