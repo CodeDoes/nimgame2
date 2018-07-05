@@ -702,7 +702,7 @@ proc absPos*(entity: Entity): Coord =
                entity.absRot)
 
 
-template dim*(entity: Entity): Dim =
+method dim*(entity: Entity): Dim {.base.} =
   ##  ``Return`` ``entity.sprite.dim`` if ``entity.sprite`` is not `nil`,
   ##  or ``entity.graphic.dim`` otherwise.
   (if entity.sprite == nil:
@@ -825,17 +825,13 @@ method onCollide*(entity, target: Entity) {.base.} =
 template transform*(entity: Entity): Transform =
   ( pos: entity.absPos, 
     angle: entity.absRot, 
-    scale: entity.absScale 
-  ).Transform
+    scale: entity.absScale )
 
 template `transform=`*(entity: Entity, transform: Transform) =
   entity.pos = transform.pos 
   entity.rot = transform.angle
   entity.scale = transform.scale
 
-
-template rect*(entity: Entity): Rect =
-  entity.graphic.rect(entity.center * entity.scale)
 
 template topleft*(entity: Entity): Coord = 
   -entity.center
@@ -849,6 +845,15 @@ template bottomright*(entity: Entity): Coord =
 template bottomleft*(entity: Entity): Coord = 
   -entity.center + (0.0, entity.dim.h.toFloat)
 
+
+method rect*(entity: Entity): Rect {.base.} =
+  entity.graphic.rect(
+    entity.absPos,
+    entity.absRot,
+    entity.absScale,
+    entity.center,
+    entity.flip
+  )
 
 template corners*(entity: Entity): untyped =
   [
