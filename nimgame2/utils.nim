@@ -551,3 +551,25 @@ proc update*(counter: Counter) =
 proc value*(counter: Counter): int {.inline.} =
   counter.current
 
+
+proc `*`*(a: Rect; mult: float):Rect=
+  let
+    center: Coord=(
+      a.x.float + a.w.float * 0.5,
+      a.y.float + a.h.float * 0.5,
+    )
+  return Rect(
+    x: (center.x - a.w.float * 0.5 * mult).int,
+    y: (center.y - a.h.float * 0.5 * mult).int,
+    w: (a.w.float * mult).int,
+    h: (a.h.float * mult).int)
+proc `size=`*(a: var Rect, size: Dim)=
+  a.w=size.w
+  a.h=size.h
+proc size*(a: Rect):Dim=
+  (a.w.int,a.h.int)
+proc pos*(a: Rect):Dim=
+  (a.x.int,a.y.int)
+proc `pos=`*(a: var Rect, pos: Dim)=
+  a.x=pos.w
+  a.y=pos.h
