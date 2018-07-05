@@ -44,9 +44,23 @@ method draw*(graphic: Graphic,
              center: Coord = (0.0, 0.0),
              flip: Flip = Flip.none,
              region: Rect = Rect(x: 0, y: 0, w: 0, h: 0)) {.base.} = discard
-template rect*(self: Graphic, offset: Coord): Rect=
-  Rect(
-    x: (self.dim.w.float - offset.x).cint,
-    y: (self.dim.h.float - offset.y).cint,
-    w: self.dim.w.cint,
-    h: self.dim.h.cint)
+
+
+method rect*(
+    graphic: Graphic, 
+    pos: Coord = (0.0, 0.0),
+    angle: Angle = 0.0,
+    scale: Scale = 1.0,
+    center: Coord = (0.0, 0.0),
+    flip: Flip = Flip.none,
+    region: Rect = Rect(x: 0, y: 0, w: 0, h: 0)): Rect {.base.} =
+  ## Does not take rotation into account
+  ## Offsets rect by `pos - center`
+  let
+    real_dim = graphic.dim * scale
+    real_pos = pos - center * scale
+  return Rect(
+    x: real_pos.x.cint,
+    y: real_pos.y.cint,
+    w: real_dim.x.cint,
+    h: real_dim.y.cint)
